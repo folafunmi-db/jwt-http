@@ -4,6 +4,7 @@ import {
 	Arg,
 	Ctx,
 	Field,
+	Int,
 	Mutation,
 	ObjectType,
 	Query,
@@ -15,6 +16,7 @@ import { MyContext } from "./MyContext";
 import { createAccessToken, createRefreshToken } from "./auth";
 import { isAuth } from "./isAuth";
 import { sendRefreshToken } from "./sendRefreshToken";
+import { getConnection } from "typeorm";
 
 @ObjectType()
 class LoginResponse {
@@ -81,5 +83,19 @@ export class UserResolver {
 		return {
 			accessToken: createAccessToken(user),
 		};
+	}
+
+	// test endpoint to revoke refresh tokens by incrementing the token version
+	@Mutation(() => Boolean)
+	async revokeRefreshToken(@Arg("userId", () => Int) userId: number) {
+		try {
+			await getConnection()
+				.getRepository(User)
+				.increment({ id: userId }, "tokenVersion", 1);
+			return true;
+		} catch (error) {
+			console.log("Revoke refresh token error =>> ", error);
+			return false;
+		}
 	}
 }
