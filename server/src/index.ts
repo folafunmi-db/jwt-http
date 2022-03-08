@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import "dotenv/config";
 import { createConnection } from "typeorm";
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
@@ -8,6 +9,10 @@ import { UserResolver } from "./UserResolver";
 (async () => {
 	const app = express();
 	app.get("/", (_req, res) => res.send("hello"));
+	app.post("/refresh_token", (req, res) => {
+		console.log("req.headers", req.headers);
+		res.send(req.headers);
+	});
 
 	await createConnection();
 
@@ -15,6 +20,7 @@ import { UserResolver } from "./UserResolver";
 		schema: await buildSchema({
 			resolvers: [UserResolver],
 		}),
+		context: ({ req, res }) => ({ req, res }),
 	});
 
 	await apolloServer.start();
